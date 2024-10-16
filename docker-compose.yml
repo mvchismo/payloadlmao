@@ -10,26 +10,43 @@ services:
       - node_modules:/home/node/app/node_modules
     working_dir: /home/node/app/
     command: sh -c "yarn install && yarn dev"
-    depends_on:
-      - mongo
     env_file:
       - .env
     networks:
       - app-network
 
-  mongo:
-    image: mongo:4.4.18
-    platform: linux/amd64
+  db:  # Changed from 'supabase' to 'db' for common naming convention
+    container_name: supabase-db
+    image: supabase/postgres:15.1.1.78
+    healthcheck:
+      test: pg_isready -U postgres -h localhost
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} 
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - '27017:27017'
-    command:
-      - --storageEngine=wiredTiger
-    volumes:
-      - data:/data/db
-    logging:
-      driver: none
+      - "5432:5432"
     networks:
       - app-network
+
+
+# Uncomment if you're still using MongoDB
+#   mongo:
+#     image: mongo:4.4.18
+#     platform: linux/amd64
+#     ports:
+#       - '27017:27017'
+#     command:
+#       - --storageEngine=wiredTiger
+#     volumes:
+#       - data:/data/db
+#     logging:
+#       driver: none
+#     networks:
+#       - app-network
 
 volumes:
   data:
